@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register — Repx</title>
+  <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png"> <!-- Use the correct type -->
+
+  <link href="{% static 'css/output.css' %}" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+
+  <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col justify-center relative">
+    <div class="absolute top-[60px] left-[250px] transform -translate-x-1/2 flex items-center space-x-4">
+      <img
+          src="{% static 'img/logo_gymR.png' %}"
+          alt="Логотип Repx"
+          class="w-[196px] h-[140px]"
+      />
+    </div>
+
+    <h2 class="text-xl font-semibold text-center text-gray-800 mb-6">Create your account</h2>
+
+    <form id="registerForm" method="POST" action="{% url 'register' %}" class="space-y-5">
+      {% csrf_token %}
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+        <input type="email" name="email" id="email" required
+               class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#622B8F] text-sm">
+        <p id="email-error" class="text-sm text-red-600 mt-1 hidden">This email is already registered</p>
+      </div>
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+        <input type="text" name="username" id="username" required
+               class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#622B8F] text-sm">
+        <p id="username-error" class="text-sm text-red-600 mt-1 hidden">This username is already taken</p>
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input type="password" name="password" id="password" required
+               class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#622B8F] text-sm">
+
+        <ul id="password-requirements" class="text-xs mt-2 text-gray-600 list-disc ml-5 space-y-1">
+          <li id="len">Minimum 8 characters</li>
+          <li id="upper">At least one uppercase letter (A-Z)</li>
+          <li id="lower">At least one lowercase letter (a-z)</li>
+          <li id="digit">At least one number (0-9)</li>
+          <li id="special">At least one special character (!@#$...)</li>
+        </ul>
+      </div>
+      <button type="submit" id="submitBtn"
+              class="w-full bg-[#622B8F] hover:bg-[#4e2373] text-white font-semibold py-3 rounded-lg transition">
+        Sign up
+      </button>
+    </form>
+
+    <p class="mt-6 text-sm text-gray-600 text-center">
+      Already have an account?
+      <a href="/login" class="text-[#622B8F] hover:text-[#4e2373] font-medium">Sign in</a>
+    </p>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const emailInput = document.getElementById('email');
+    const usernameInput = document.getElementById('username');
+    const emailError = document.getElementById('email-error');
+    const usernameError = document.getElementById('username-error');
+    const submitBtn = document.getElementById('submitBtn');
+    const passwordInput = document.getElementById('password');
+    const requirements = {
+      len: document.getElementById('len'),
+      upper: document.getElementById('upper'),
+      lower: document.getElementById('lower'),
+      digit: document.getElementById('digit'),
+      special: document.getElementById('special')
+    };
+
+    let emailValid = true;
+    let usernameValid = true;
+    passwordInput.addEventListener('input', () => {
+      const val = passwordInput.value;
+      requirements.len.style.display = val.length >= 8 ? 'none' : 'list-item';
+      requirements.upper.style.display = /[A-Z]/.test(val) ? 'none' : 'list-item';
+      requirements.lower.style.display = /[a-z]/.test(val) ? 'none' : 'list-item';
+      requirements.digit.style.display = /\d/.test(val) ? 'none' : 'list-item';
+      requirements.special.style.display = /[!@#$%^&*(),.?":{}|<>]/.test(val) ? 'none' : 'list-item';
+    });
+    emailInput.addEventListener('blur', async () => {
+      const email = emailInput.value;
+      if (email.length === 0) return;
+
+      try {
+        const response = await fetch('/api/check-email/?email=' + encodeURIComponent(email));
+        const data = await response.json();
+        emailValid = !data.exists;
+        emailError.classList.toggle('hidden', emailValid);
+        submitBtn.disabled = !emailValid || !usernameValid;
+      } catch (error) {
+        console.error('Email check error:', error);
+      }
+    });
+    usernameInput.addEventListener('blur', async () => {
+      const username = usernameInput.value;
+      if (username.length === 0) return;
+
+      try {
+        const response = await fetch('/api/check-username/?username=' + encodeURIComponent(username));
+        const data = await response.json();
+        usernameValid = !data.exists;
+        usernameError.classList.toggle('hidden', usernameValid);
+        submitBtn.disabled = !emailValid || !usernameValid;
+      } catch (error) {
+        console.error('Username check error:', error);
+      }
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!emailValid || !usernameValid) {
+        return;
+      }
+
+      const formData = new FormData(form);
+      try {
+        const response = await fetch('{% url "register" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+          },
+          body: JSON.stringify({
+            email: formData.get('email'),
+            username: formData.get('username'),
+            password: formData.get('password'),
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          window.location.href = data.redirect;
+        } else {
+          if (data.errors.email) {
+            emailError.textContent = data.errors.email;
+            emailError.classList.remove('hidden');
+          }
+          if (data.errors.username) {
+            usernameError.textContent = data.errors.username;
+            usernameError.classList.remove('hidden');
+          }
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+      }
+    });
+  </script>
+</body>
+</html>
