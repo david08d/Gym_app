@@ -13,7 +13,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+load_dotenv()
 
+
+NINJA_API_KEY = os.getenv('NINJA_API_KEY')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -83,14 +86,14 @@ WSGI_APPLICATION = 'gym_app.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-load_dotenv()
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'Gym_app',
         'USER': 'root',
         'PASSWORD': os.getenv('PASSWORD'),
-        'HOST': 'localhost',  # or your MySQL host
+        'HOST': 'localhost',
         'PORT': '3307',
     }
 }

@@ -11,5 +11,7 @@ urlpatterns = [
     path('api/check-email/', check_email_view, name='check_email'),
     path('api/check-username/', check_username_view, name='check_username'),
     path('select-exercise/', views.select_exercise_view, name='select_exercise'),
+    path('exercise/', views.exercises_page, name='exercise'),
+    # path('exercises/<int:pk>/', views.ExerciseDetailView.as_view(), name='exercise_detail'),
 
 ]

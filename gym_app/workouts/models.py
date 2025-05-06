@@ -6,12 +6,18 @@ class Muscle(models.Model):
     def __str__(self):
         return self.name
 
+
 class Exercise(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    muscle = models.ForeignKey(Muscle, on_delete=models.CASCADE, related_name='exercises')
-    equipment = models.CharField(max_length=50)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_exercises')
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=50, default="powerlifting")
+    muscle = models.CharField(max_length=50)
+    equipment = models.CharField(max_length=100)
+    instructions = models.TextField(default="")
+    body_part = models.CharField(max_length=50, default="")
+    gif_url = models.URLField(max_length=500, blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_exercises', default=8)
     likes = models.ManyToManyField(User, related_name='liked_exercises', blank=True)
+
     def __str__(self):
         return self.name
 
