@@ -11,10 +11,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from django.core.paginator import Paginator
+
 from .models import Exercise
 from .serializers import UserRegisterSerializer
 from rest_framework.authtoken.models import Token
+from django.http import JsonResponse
+from django.db.models import Q
 
 def home_view(request):
     return render(request, 'workouts/home.html')
@@ -27,8 +29,7 @@ def main_view(request):
 def select_exercise_view(request):
     return render(request, 'workouts/select_exercise.html')
 
-from django.http import JsonResponse
-from django.db.models import Q
+
 
 @login_required
 def exercises_page(request):
@@ -75,33 +76,9 @@ def exercises_page(request):
 
     return render(request, 'workouts/exercise.html', context)
 
-# @login_required
-#
-#
-# def exercises_page(request):
-#     # Get popular exercises (assuming popularity by like count)
-#     popular_exercises = Exercise.objects.annotate(
-#         like_count=Count('likes')
-#     ).order_by('-like_count')[:5]
-#
-#     # Group exercises by body part
-#     categories = []
-#     body_parts = Exercise.objects.values_list('body_part', flat=True).distinct()
-#
-#     for body_part in body_parts:
-#         if body_part:
-#             category = {
-#                 'name': body_part.title(),
-#                 'exercises': Exercise.objects.filter(body_part=body_part)[:20]
-#             }
-#             categories.append(category)
-#
-#     context = {
-#         'popular_exercises': popular_exercises,
-#         'categories': categories,
-#     }
-#
-#     return render(request, 'workouts/exercise.html', context)
+
+
+
 
 @login_required
 class ExerciseDetailView(DetailView):
