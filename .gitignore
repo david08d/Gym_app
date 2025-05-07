@@ -1,27 +1,43 @@
 # Python
 *.pyc
 __pycache__/
+*.pyo
+*.pyd
 
-# Node
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+static/
+
+# Node.js
 node_modules/
 package-lock.json
+yarn.lock
 
-# IDE
-.idea/
-
-# Tailwind
+# Tailwind/PostCSS
 postcss.config.js
 tailwind.config.js
 
-# Static if generated
-static/
+# Build folders
+dist/
+build/
 src/
 
-# VS Code
+# Environment variables
+.env
+
+# IDEs
+.idea/
 .vscode/
 
-# Env
-.env
-.venv/
-# created by virtualenv automatically
-
+# macOS/Windows
+.DS_Store
+Thumbs.db
