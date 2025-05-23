@@ -21,6 +21,7 @@ class Exercise(models.Model):
     def __str__(self):
         return self.name
 
+
 class Training(models.Model):
     name = models.CharField(max_length=100)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='trainings')
