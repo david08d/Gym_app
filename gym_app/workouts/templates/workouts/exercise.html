@@ -1,4 +1,3 @@
-<!-- workouts/templates/workouts/exercise.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -19,13 +18,13 @@
 </style>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col">
-        <!-- Header with Create button -->
+
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-xl font-bold">Exercises</h1>
             <button class="text-[#622B8F] font-semibold">Create</button>
         </div>
 
-        <!-- Search Bar -->
+
         <div class="relative mb-6">
             <input type="text"
                    placeholder="Search exercise"
@@ -35,15 +34,15 @@
             </svg>
         </div>
 
-        <!-- Filter Buttons -->
+
         <div class="flex space-x-4 mb-6 overflow-x-auto py-2">
             <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-full whitespace-nowrap">Equipment</button>
             <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-full whitespace-nowrap">Muscles</button>
         </div>
 
-        <!-- Exercise Categories -->
+
         <div class="flex-1 overflow-y-auto">
-            <!-- Popular Section -->
+
             <div class="mb-6">
                 <h2 class="text-[#622B8F] font-semibold mb-4">Popular</h2>
                 <div class="space-y-4">
@@ -67,7 +66,7 @@
                 </div>
             </div>
 
-            <!-- Categories -->
+
             {% for category in categories %}
 
             <div class="mb-6">
@@ -95,7 +94,7 @@
         </div>
 
 
-        <!-- Bottom Navigation -->
+
         <div class="mt-auto">
             <div class="flex justify-around items-center bg-white rounded-full p-4 shadow-lg">
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
@@ -118,91 +117,68 @@
             </div>
         </div>
     </div>
-
-<!--    <script>-->
-<!--        const searchInput = document.querySelector('input[type="text"]');-->
-<!--        searchInput.addEventListener('input', (e) => {-->
-<!--            const searchTerm = e.target.value.toLowerCase();-->
-<!--            document.querySelectorAll('.exercise-item').forEach(item => {-->
-<!--                const name = item.querySelector('h3').textContent.toLowerCase();-->
-<!--                const muscle = item.querySelector('p').textContent.toLowerCase();-->
-<!--                if (name.includes(searchTerm) || muscle.includes(searchTerm)) {-->
-<!--                    item.style.display = '';-->
-<!--                } else {-->
-<!--                    item.style.display = 'none';-->
-<!--                }-->
-<!--            });-->
-<!--        });-->
-<!--    </script>-->
         <script>
-            const searchInput = document.querySelector('input[type="text"]');
-            const categoriesContainer = document.querySelector('.flex-1'); // Container with categories
+    const searchInput = document.querySelector('input[type="text"]');
+    const categoriesContainer = document.querySelector('.flex-1'); // Container with categories
 
-            searchInput.addEventListener('input', async (e) => {
-                const searchTerm = e.target.value.trim();
+    searchInput.addEventListener('input', async (e) => {
+        const searchTerm = e.target.value.trim();
 
-                if (!searchTerm) {
-                    location.reload();
-                    return;
+        if (!searchTerm) {
+            location.reload();  // Якщо пошук пустий — перезавантажити, щоб повернути початковий стан
+            return;
+        }
+
+        const response = await fetch(`?search=${encodeURIComponent(searchTerm)}`);
+        const data = await response.json();
+        categoriesContainer.innerHTML = '';
+
+        for (const [categoryName, exercises] of Object.entries(data.categories)) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.classList.add('mb-6');
+
+            const heading = document.createElement('h2');
+            heading.className = "text-[#622B8F] font-semibold mb-4";
+            heading.textContent = categoryName;
+            categoryDiv.appendChild(heading);
+
+            const exerciseList = document.createElement('div');
+            exerciseList.classList.add('space-y-4');
+
+            exercises.forEach(exercise => {
+                const exerciseItem = document.createElement('div');
+                exerciseItem.className = "exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer";
+                exerciseItem.style.width = "430px";
+                exerciseItem.style.height = "74px";
+                exerciseItem.style.overflow = "hidden";
+
+                if (exercise.gif_url) {
+                    exerciseItem.innerHTML = `
+                        <img src="${exercise.gif_url}" alt="${exercise.name}" class="w-12 h-12 object-cover rounded bg-gray-200">
+                        <div>
+                            <h3 class="font-medium text-sm truncate max-w-[200px]">${exercise.name}</h3>
+                            <p class="text-sm text-[#622B8F] truncate max-w-[150px]">${exercise.muscle}</p>
+                        </div>
+                    `;
+                } else {
+                    exerciseItem.innerHTML = `
+                        <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
+                            <ion-icon name="barbell-outline"></ion-icon>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-sm truncate max-w-[200px]">${exercise.name}</h3>
+                            <p class="text-sm text-[#622B8F] truncate max-w-[150px]">${exercise.muscle}</p>
+                        </div>
+                    `;
                 }
 
-                const response = await fetch(`?search=${encodeURIComponent(searchTerm)}`);
-                const data = await response.json();
-
-
-                categoriesContainer.innerHTML = '';
-
-                for (const [categoryName, exercises] of Object.entries(data.categories)) {
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.classList.add('mb-6');
-
-                    const heading = document.createElement('h2');
-                    heading.className = "text-[#622B8F] font-semibold mb-4";
-                    heading.textContent = categoryName;
-                    categoryDiv.appendChild(heading);
-
-                    const exerciseList = document.createElement('div');
-                    exerciseList.classList.add('space-y-4');
-
-                    exercises.forEach(exercise => {
-                        const exerciseItem = document.createElement('div');
-                        exerciseItem.className = "exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer";
-                        exerciseItem.style.width = "430px";
-                        exerciseItem.style.height = "74px";
-                        exerciseItem.style.overflow = "hidden";
-
-                        if (exercise.gif_url) {
-                            exerciseItem.innerHTML = `
-                                <img src="${exercise.gif_url}" alt="${exercise.name}" class="w-12 h-12 object-cover rounded bg-gray-200">
-                                <div>
-                                    <h3 class="font-medium text-sm truncate max-w-[200px]">${exercise.name}</h3>
-                                    <p class="text-sm text-[#622B8F] truncate max-w-[150px]">${exercise.muscle}</p>
-                                </div>
-                            `;
-                        } else {
-                            exerciseItem.innerHTML = `
-                                <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
-                                    <ion-icon name="barbell-outline"></ion-icon>
-                                </div>
-                                <div>
-                                    <h3 class="font-medium text-sm truncate max-w-[200px]">${exercise.name}</h3>
-                                    <p class="text-sm text-[#622B8F] truncate max-w-[150px]">${exercise.muscle}</p>
-                                </div>
-                            `;
-                        }
-
-                        exerciseList.appendChild(exerciseItem);
-                    });
-
-                    categoryDiv.appendChild(exerciseList);
-                    categoriesContainer.appendChild(categoryDiv);
-                }
+                exerciseList.appendChild(exerciseItem);
             });
-        </script>
 
+            categoryDiv.appendChild(exerciseList);
+            categoriesContainer.appendChild(categoryDiv);
+        }
+    });
+</script>
 </body>
 </html>
-
-
-
-

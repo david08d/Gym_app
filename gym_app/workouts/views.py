@@ -1,16 +1,22 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.db.models import Count
+from django.http import JsonResponse, request
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.views.generic import DetailView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from .models import Exercise
 from .serializers import UserRegisterSerializer
 from rest_framework.authtoken.models import Token
+from django.http import JsonResponse
+from django.db.models import Q
 
 def home_view(request):
     return render(request, 'workouts/home.html')
@@ -22,6 +28,68 @@ def main_view(request):
 @login_required
 def select_exercise_view(request):
     return render(request, 'workouts/select_exercise.html')
+
+
+
+@login_required
+def exercises_page(request):
+    search_query = request.GET.get('search')
+
+    if search_query:
+        exercises = Exercise.objects.filter(
+            Q(name__icontains=search_query) |
+            Q(muscle__icontains=search_query)
+        )
+        categories = {}
+        for exercise in exercises:
+            part = exercise.body_part or "Other"
+            categories.setdefault(part, []).append({
+                'name': exercise.name,
+                'muscle': exercise.muscle,
+                'gif_url': exercise.gif_url
+            })
+
+        return JsonResponse({'categories': categories})
+
+
+    popular_exercises = Exercise.objects.annotate(
+        like_count=Count('likes')
+    ).order_by('-like_count')[:5]
+
+    body_parts = Exercise.objects.values_list('body_part', flat=True).distinct()
+    categories = []
+    for body_part in body_parts:
+        if body_part:
+            category = {
+                'name': body_part.title(),
+                'exercises': Exercise.objects.filter(body_part=body_part)[:20]
+            }
+            categories.append(category)
+
+    context = {
+        'popular_exercises': popular_exercises,
+        'categories': categories,
+    }
+
+    return render(request, 'workouts/exercise.html', context)
+
+
+
+
+
+@login_required
+class ExerciseDetailView(DetailView):
+    model = Exercise
+    template_name = 'workouts/exercise_detail.html'
+    context_object_name = 'exercise'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get similar exercises by same muscle
+        context['similar_exercises'] = Exercise.objects.filter(
+            muscle=self.object.muscle
+        ).exclude(id=self.object.id)[:4]
+        return context
 
 class ProtectedView(APIView):
     permission_classes = [IsAuthenticated]
@@ -50,8 +118,7 @@ def check_email_view(request):
 def register(request):
     if request.method == 'GET':
         return render(request, 'workouts/register.html')
-
-    serializer = UserRegisterSerializer(data=request.data)
+        serializer = UserRegisterSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
         token, _ = Token.objects.get_or_create(user=user)
@@ -62,7 +129,7 @@ def register(request):
             "token": token.key,
             "redirect": "/main/"
         })
-    
+
     errors = {}
     if 'username' in serializer.errors:
         errors['username'] = 'Username is already taken'
@@ -73,6 +140,7 @@ def register(request):
         "errors": errors
     }, status=400)
 
+
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -81,7 +149,7 @@ def login_view(request):
 
     email = request.data.get('email')
     password = request.data.get('password')
-    
+
     try:
         user = User.objects.get(email=email)
         if user.check_password(password):
@@ -94,11 +162,12 @@ def login_view(request):
             })
     except User.DoesNotExist:
         pass
-    
+
     return JsonResponse({
         'success': False,
         'error': 'Invalid email or password'
     }, status=401)
+
 
 @api_view(['GET'])
 def get_users(request):
@@ -129,3 +198,49 @@ def delete_user(request, user_id):
         return Response({"message": "User deleted successfully!"}, status=status.HTTP_204_NO_CONTENT)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@login_required
+def exercise_list(request):
+    search_query = request.GET.get('search')
+
+    if search_query:
+        exercises = Exercise.objects.filter(
+            Q(name__icontains=search_query) |
+            Q(muscle__icontains=search_query)
+        )
+        categories = {}
+        for exercise in exercises:
+            part = exercise.body_part or "Other"
+            categories.setdefault(part, []).append({
+                'name': exercise.name,
+                'muscle': exercise.muscle,
+                'gif_url': exercise.gif_url
+            })
+
+        return JsonResponse({'categories': categories})
+    popular_exercises = Exercise.objects.annotate(
+        like_count=Count('likes')
+    ).order_by('-like_count')[:5]
+
+    body_parts = Exercise.objects.values_list('body_part', flat=True).distinct()
+    categories = []
+    for body_part in body_parts:
+        if body_part:
+            category = {
+                'name': body_part.title(),
+                'exercises': Exercise.objects.filter(body_part=body_part)[:20]
+            }
+            categories.append(category)
+
+    context = {
+        'popular_exercises': popular_exercises,
+        'categories': categories,
+    }
+
+    return render(request, 'workouts/exercise.html', context)
+
+
+def exercise_detail(request, pk):
+    exercise = get_object_or_404(Exercise, pk=pk)
+    return render(request, 'workouts/exercise_detail.html', {'exercise': exercise})
