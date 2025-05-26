@@ -21,7 +21,6 @@
 
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-xl font-bold">Exercises</h1>
-            <button class="text-[#622B8F] font-semibold">Create</button>
         </div>
 
 
@@ -41,27 +40,29 @@
         </div>
 
 
+
         <div class="flex-1 overflow-y-auto">
+
 
             <div class="mb-6">
                 <h2 class="text-[#622B8F] font-semibold mb-4">Popular</h2>
                 <div class="space-y-4">
                     {% for exercise in popular_exercises %}
-                    <div class="exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer" style="width: 430px; height: 74px; overflow: hidden;">
-
-                        {% if exercise.gif_url %}
-                        <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded bg-gray-200">
-                        {% else %}
-                        <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
-                            <ion-icon name="barbell-outline"></ion-icon>
-                        </div>
-                        {% endif %}
-                        <div>
-                            <h3 class="font-medium text-sm truncate max-w-[200px]">{{ exercise.name }}</h3>
-                            <p class="text-sm text-[#622B8F] truncate max-w-[150px]">{{ exercise.muscle }}</p>
-                        </div>
-                    </div>
-
+                        <a href="{% url 'exercise_detail' exercise.id %}" class="block">
+                            <div class="exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer" style="width: 430px; height: 74px; overflow: hidden;" >
+                                {% if exercise.gif_url %}
+                                <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded bg-gray-200">
+                                {% else %}
+                                <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
+                                    <ion-icon name="barbell-outline"></ion-icon>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h3 class="font-medium text-sm truncate max-w-[200px]">{{ exercise.name }}</h3>
+                                    <p class="text-sm text-[#622B8F] truncate max-w-[150px]">{{ exercise.muscle }}</p>
+                                </div>
+                            </div>
+                        </a>
                     {% endfor %}
                 </div>
             </div>
@@ -73,19 +74,22 @@
                 <h2 class="text-[#622B8F] font-semibold mb-4">{{ category.name }}</h2>
                 <div class="space-y-4">
                     {% for exercise in category.exercises %}
-                    <div class="exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer" style="width: 430px; height: 74px; overflow: hidden;">
-                        {% if exercise.gif_url %}
-                        <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded bg-gray-200">
-                        {% else %}
-                        <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
-                            <ion-icon name="barbell-outline"></ion-icon>
+                    <a href="{% url 'exercise_detail' exercise.id %}" class="block">
+                        <div class="exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer" style="width: 430px; height: 74px; overflow: hidden;">
+                            {% if exercise.gif_url %}
+                            <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded bg-gray-200">
+                            {% else %}
+                            <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
+                                <ion-icon name="barbell-outline"></ion-icon>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h3 class="font-medium text-sm truncate max-w-[200px]">{{ exercise.name }}</h3>
+                                <p class="text-sm text-[#622B8F] truncate max-w-[150px]">{{ exercise.muscle }}</p>
+                            </div>
                         </div>
-                        {% endif %}
-                        <div>
-                            <h3 class="font-medium text-sm truncate max-w-[200px]">{{ exercise.name }}</h3>
-                            <p class="text-sm text-[#622B8F] truncate max-w-[150px]">{{ exercise.muscle }}</p>
-                        </div>
-                    </div>
+                    </a>
+
                     {% endfor %}
                 </div>
             </div>
@@ -179,6 +183,9 @@
             categoriesContainer.appendChild(categoryDiv);
         }
     });
+
+
+
 </script>
 </body>
 </html>

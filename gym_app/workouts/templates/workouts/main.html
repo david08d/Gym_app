@@ -49,25 +49,25 @@
 
         <div class="mt-auto">
             <div class="flex justify-around items-center bg-white rounded-full p-4 shadow-lg">
-                <!-- Home icon -->
+
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
                     <ion-icon name="home-outline"></ion-icon>
                 </button>
-                <!-- Gym barbell icon -->
-                <a href="{% url 'exercise' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+
+                <a href="{% url 'exercise_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
                     <button type="button" class="flex items-center justify-center w-full">
                         <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
                     </button>
                 </a>
-                <!-- Plus icon -->
+
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
                     <ion-icon name="add-outline"></ion-icon>
                 </button>
-                <!-- Heart icon -->
+
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
                     <ion-icon name="heart-outline"></ion-icon>
                 </button>
-                <!-- Profile icon -->
+
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
                     <ion-icon name="person-outline"></ion-icon>
                 </button>
@@ -120,7 +120,7 @@
         function finishWorkout() {
             clearInterval(timerInterval);
             document.getElementById('workoutModal').classList.add('hidden');
-            // Add logic to save workout
+
         }
 
         document.getElementById('startEmptyWorkout').addEventListener('click', () => {

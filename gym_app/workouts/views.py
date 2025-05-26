@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from .models import Exercise
+from .models import Exercise, Muscle
 from .serializers import UserRegisterSerializer
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
@@ -28,52 +28,6 @@ def main_view(request):
 @login_required
 def select_exercise_view(request):
     return render(request, 'workouts/select_exercise.html')
-
-
-
-@login_required
-def exercises_page(request):
-    search_query = request.GET.get('search')
-
-    if search_query:
-        exercises = Exercise.objects.filter(
-            Q(name__icontains=search_query) |
-            Q(muscle__icontains=search_query)
-        )
-        categories = {}
-        for exercise in exercises:
-            part = exercise.body_part or "Other"
-            categories.setdefault(part, []).append({
-                'name': exercise.name,
-                'muscle': exercise.muscle,
-                'gif_url': exercise.gif_url
-            })
-
-        return JsonResponse({'categories': categories})
-
-
-    popular_exercises = Exercise.objects.annotate(
-        like_count=Count('likes')
-    ).order_by('-like_count')[:5]
-
-    body_parts = Exercise.objects.values_list('body_part', flat=True).distinct()
-    categories = []
-    for body_part in body_parts:
-        if body_part:
-            category = {
-                'name': body_part.title(),
-                'exercises': Exercise.objects.filter(body_part=body_part)[:20]
-            }
-            categories.append(category)
-
-    context = {
-        'popular_exercises': popular_exercises,
-        'categories': categories,
-    }
-
-    return render(request, 'workouts/exercise.html', context)
-
-
 
 
 
@@ -201,7 +155,7 @@ def delete_user(request, user_id):
 
 
 @login_required
-def exercise_list(request):
+def exercise_page(request):
     search_query = request.GET.get('search')
 
     if search_query:
@@ -244,3 +198,6 @@ def exercise_list(request):
 def exercise_detail(request, pk):
     exercise = get_object_or_404(Exercise, pk=pk)
     return render(request, 'workouts/exercise_detail.html', {'exercise': exercise})
+
+
+
