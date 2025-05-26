@@ -46,8 +46,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'workouts',
     'rest_framework.authtoken',
+    'workouts.apps.WorkoutsConfig',
 
 
 ]

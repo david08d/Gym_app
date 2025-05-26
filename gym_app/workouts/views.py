@@ -1,9 +1,9 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.http import JsonResponse, request
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.generic import DetailView
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from .models import Exercise, Muscle
+from .models import Exercise, Muscle, Profile
 from .serializers import UserRegisterSerializer
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
@@ -27,7 +27,9 @@ def main_view(request):
 
 @login_required
 def select_exercise_view(request):
-    return render(request, 'workouts/select_exercise.html')
+    exercises = Exercise.objects.all()
+    return render(request, 'workouts/select_exercise.html', {'exercises': exercises})
+
 
 
 
@@ -199,5 +201,21 @@ def exercise_detail(request, pk):
     exercise = get_object_or_404(Exercise, pk=pk)
     return render(request, 'workouts/exercise_detail.html', {'exercise': exercise})
 
+# def profile_page(request):
+#     return render(request, 'workouts/profile.html')
 
+def logout_view(request):
+    logout(request)
+    return render(request, 'workouts/home.html')
 
+login_required
+def profile_page(request):
+    if request.method == 'POST':
+        photo = request.FILES.get('profile_image')
+        if photo:
+            profile = request.user.profile
+            profile.photo = photo
+            profile.save()
+        return render(request, ('workouts/profile.html'))  # або ім'я URL сторінки профілю
+
+    return render(request, 'workouts/profile.html')

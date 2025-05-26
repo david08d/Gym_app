@@ -1,0 +1,69 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Select Exercise - Repx</title>
+  <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+
+  <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col relative">
+
+    <div class="flex justify-between items-center mb-6">
+      <button onclick="window.history.back()" class="text-gray-600">Cancel</button>
+      <h2 class="text-lg font-semibold text-[#622B8F]">Select Exercise</h2>
+      <span class="w-12"></span>
+    </div>
+
+    <div class="mb-4">
+      <div class="relative">
+        <input id="searchInput" type="search" placeholder="Search exercise"
+          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#622B8F] bg-white">
+        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto space-y-4 mt-2">
+      {% for exercise in exercises %}
+      <div class="exercise-item flex items-center space-x-4 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition"
+           data-name="{{ exercise.name|lower }}" data-muscle="{{ exercise.muscle|lower }}">
+        <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded" />
+        <div>
+          <h4 class="font-medium text-base">{{ exercise.name }}</h4>
+          <p class="text-sm text-gray-600">{{ exercise.muscle }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-sm text-gray-500">No exercises found.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+
+    document.querySelectorAll('.exercise-item').forEach(ex => {
+      ex.addEventListener('click', () => {
+        const name = ex.dataset.name;
+        const muscle = ex.dataset.muscle;
+        window.location.href = `{% url 'main' %}?exercise=${encodeURIComponent(name)}&type=${encodeURIComponent(muscle)}`;
+      });
+    });
+
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+      const term = this.value.toLowerCase();
+      document.querySelectorAll('.exercise-item').forEach(item => {
+        const name = item.dataset.name;
+        const muscle = item.dataset.muscle;
+        item.style.display = (name.includes(term) || muscle.includes(term)) ? 'flex' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>

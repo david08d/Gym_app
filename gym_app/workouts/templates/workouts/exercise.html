@@ -115,9 +115,11 @@
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
                     <ion-icon name="heart-outline"></ion-icon>
                 </button>
-                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
-                    <ion-icon name="person-outline"></ion-icon>
-                </button>
+                <a href="{% url 'profile_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="person-outline" class="text-xl"></ion-icon>
+                    </button>
+                </a>
             </div>
         </div>
     </div>

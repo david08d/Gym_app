@@ -1,0 +1,181 @@
+
+<!--{% load static %}-->
+<!--<!DOCTYPE html>-->
+<!--<html lang="uk">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8" />-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1" />-->
+<!--    <title>Профіль користувача - Repx</title>-->
+<!--    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png" />-->
+<!--    <link href="{% static 'css/output.css' %}" rel="stylesheet" />-->
+<!--    <script src="https://cdn.tailwindcss.com"></script>-->
+<!--</head>-->
+<!--<body class="bg-gray-100 flex items-center justify-center min-h-screen">-->
+
+<!--    &lt;!&ndash; Фіксована рамка &ndash;&gt;-->
+<!--    <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col overflow-hidden">-->
+
+<!--        &lt;!&ndash; Прокручувана частина &ndash;&gt;-->
+<!--        <div class="overflow-y-auto flex-1 pr-1">-->
+<!--            &lt;!&ndash; Логотип &ndash;&gt;-->
+<!--            <div class="flex justify-start mb-4">-->
+<!--                <img src="{% static 'img/logo_gymR.png' %}" alt="Logo" class="w-[100px] h-[70px]" />-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Заголовок &ndash;&gt;-->
+<!--            <h2 class="text-2xl font-bold text-center text-[#622B8F] mb-6">Профіль користувача</h2>-->
+
+<!--            &lt;!&ndash; Фото та ім'я &ndash;&gt;-->
+<!--            <div class="flex flex-col items-center mb-6 relative">-->
+<!--                {% if user.profile.photo %}-->
+<!--                    <img src="{{ user.profile.photo.url }}" alt="Profile Image"-->
+<!--                         class="w-28 h-28 object-cover rounded-full border-4 border-[#622B8F] shadow-md" />-->
+<!--                {% else %}-->
+<!--                    <div class="w-28 h-28 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 border-2 border-dashed border-[#622B8F]">-->
+<!--                        Без фото-->
+<!--                    </div>-->
+<!--                {% endif %}-->
+
+<!--                &lt;!&ndash; Іконка олівця для вибору фото &ndash;&gt;-->
+<!--                <label for="profile_image"-->
+<!--                       class="absolute bottom-0 right-0 bg-[#622B8F] hover:bg-[#4e2372] cursor-pointer rounded-full p-2 shadow-md border-2 border-white">-->
+<!--                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">-->
+<!--                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M16.5 3.75a2.25 2.25 0 113.182 3.182L7.5 19.5H4.5v-3l12-12z" />-->
+<!--                    </svg>-->
+<!--                </label>-->
+<!--            </div>-->
+<!--            <h3 class="text-lg font-semibold text-gray-800 text-center mb-6">@{{ user.username }}</h3>-->
+
+<!--            &lt;!&ndash; Форма оновлення фото (CSRF токен всередині форми!) &ndash;&gt;-->
+<!--            <form method="POST" enctype="multipart/form-data" id="uploadForm">-->
+<!--                {% csrf_token %}-->
+<!--                <input type="file" name="profile_image" id="profile_image" accept="image/*" class="hidden" form="uploadForm" onchange="this.form.submit()" />-->
+<!--            </form>-->
+
+<!--            &lt;!&ndash; Кнопка виходу &ndash;&gt;-->
+<!--            <form method="POST" action="{% url 'logout' %}" class="mt-6">-->
+<!--                {% csrf_token %}-->
+<!--                <button type="submit"-->
+<!--                        class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-300 shadow font-semibold">-->
+<!--                    Вийти з акаунту-->
+<!--                </button>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--<div class="mt-auto">-->
+<!--            <div class="flex justify-around items-center bg-white rounded-full p-4 shadow-lg">-->
+<!--                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">-->
+<!--                    <ion-icon name="home-outline"></ion-icon>-->
+<!--                </button>-->
+<!--                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">-->
+<!--                    <ion-icon name="barbell-outline" class="text-xl"></ion-icon>-->
+<!--                </button>-->
+<!--                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">-->
+<!--                    <button type="button" class="flex items-center justify-center w-full">-->
+<!--                        <ion-icon name="add-outline"></ion-icon>-->
+<!--                    </button>-->
+<!--                </a>-->
+<!--                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">-->
+<!--                    <ion-icon name="heart-outline"></ion-icon>-->
+<!--                </button>-->
+<!--                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">-->
+<!--                    <ion-icon name="person-outline"></ion-icon>-->
+<!--                </button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--</body>-->
+<!--</html>-->
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Профіль користувача - Repx</title>
+    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png" />
+    <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ionicons CDN для іконок -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <!-- Фіксована рамка -->
+    <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col overflow-hidden">
+
+        <!-- Прокручувана частина (контент) з нижнім паддінгом для футера -->
+        <div class="overflow-y-auto flex-1 pr-1 pb-20">
+            <!-- Логотип -->
+            <div class="flex justify-start mb-4">
+                <img src="{% static 'img/logo_gymR.png' %}" alt="Logo" class="w-[100px] h-[70px]" />
+            </div>
+
+            <!-- Заголовок -->
+            <h2 class="text-2xl font-bold text-center text-[#622B8F] mb-6">Профіль користувача</h2>
+
+            <!-- Фото та ім'я -->
+            <div class="flex flex-col items-center mb-6 relative">
+                {% if user.profile.photo %}
+                    <img src="{{ user.profile.photo.url }}" alt="Profile Image"
+                         class="w-28 h-28 object-cover rounded-full border-4 border-[#622B8F] shadow-md" />
+                {% else %}
+                    <div class="w-28 h-28 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 border-2 border-dashed border-[#622B8F]">
+                        Без фото
+                    </div>
+                {% endif %}
+
+                <!-- Іконка олівця для вибору фото -->
+                <label for="profile_image"
+                       class="absolute bottom-0 right-0 bg-[#622B8F] hover:bg-[#4e2372] cursor-pointer rounded-full p-2 shadow-md border-2 border-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M16.5 3.75a2.25 2.25 0 113.182 3.182L7.5 19.5H4.5v-3l12-12z" />
+                    </svg>
+                </label>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 text-center mb-6">@{{ user.username }}</h3>
+
+            <!-- Форма оновлення фото -->
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+                <input type="file" name="profile_image" id="profile_image" accept="image/*" class="hidden" form="uploadForm" onchange="this.form.submit()" />
+            </form>
+
+            <!-- Кнопка виходу - компактна -->
+            <form method="POST" action="{% url 'logout' %}" class="mb-8 flex justify-center">
+                {% csrf_token %}
+                <button type="submit"
+                        class="bg-red-500 text-white py-1.5 px-6 rounded-full hover:bg-red-600 transition duration-300 shadow font-semibold text-sm">
+                    Вийти з акаунту
+                </button>
+            </form>
+        </div>
+
+        <!-- Футер з кнопками -->
+        <footer class="absolute bottom-6 left-6 right-6">
+            <div class="flex justify-around items-center bg-white rounded-full p-3 shadow-lg">
+                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <ion-icon name="home-outline" class="text-2xl"></ion-icon>
+                </button>
+                <a href="{% url 'exercise_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="add-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+                </button>
+                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <ion-icon name="person-outline" class="text-2xl"></ion-icon>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+</body>
+</html>
