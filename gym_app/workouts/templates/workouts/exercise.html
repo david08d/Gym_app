@@ -62,7 +62,7 @@
                                             <h4 class="text-base font-medium text-gray-800">{{ exercise.name }}</h4>
                                             <p class="text-sm text-gray-600">{{ exercise.muscle }}</p>
                                         </div>
-                                        <button onclick="event.stopPropagation(); toggleFavorite({{ exercise.id }}, event)" 
+                                        <button onclick="event.stopPropagation(); toggleFavorite('{{ exercise.id }}', this)" 
                                                 class="text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200 flex-shrink-0">
                                             <ion-icon name="{% if exercise in request.user.profile.favorite_exercises.all %}heart{% else %}heart-outline{% endif %}" 
                                                      class="text-2xl"></ion-icon>
@@ -94,7 +94,7 @@
                                             <h4 class="text-base font-medium text-gray-800">{{ exercise.name }}</h4>
                                             <p class="text-sm text-gray-600">{{ exercise.muscle }}</p>
                                         </div>
-                                        <button onclick="event.stopPropagation(); toggleFavorite({{ exercise.id }}, event)" 
+                                        <button onclick="event.stopPropagation(); toggleFavorite('{{ exercise.id }}', this)" 
                                                 class="text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200 flex-shrink-0">
                                             <ion-icon name="{% if exercise in request.user.profile.favorite_exercises.all %}heart{% else %}heart-outline{% endif %}" 
                                                      class="text-2xl"></ion-icon>
@@ -111,9 +111,11 @@
         </div>
         <footer class="mt-6">
             <div class="flex justify-around items-center bg-white rounded-full p-3 shadow-lg">
-                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
-                    <ion-icon name="home-outline" class="text-2xl"></ion-icon>
-                </button>
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="home-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
                 <a href="{% url 'exercise_page' %}" class="nav-link block p-2 text-[#622B8F] group">
                     <button type="button" class="flex items-center justify-center w-full">
                         <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
@@ -139,25 +141,48 @@
     </div>
 
     <script>
-        function toggleFavorite(exerciseId, event) {
-            event.preventDefault();
+        function toggleFavorite(exerciseId, button) {
             fetch(`/toggle-favorite/${exerciseId}/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                },
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    const icon = event.target.closest('button').querySelector('ion-icon');
+                    const icon = button.querySelector('ion-icon');
                     if (data.action === 'added') {
                         icon.setAttribute('name', 'heart');
                     } else {
                         icon.setAttribute('name', 'heart-outline');
                     }
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
 
         const searchInput = document.getElementById('searchInput');

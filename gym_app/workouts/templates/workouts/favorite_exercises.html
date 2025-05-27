@@ -37,6 +37,11 @@
             <h2 class="text-2xl font-bold text-[#622B8F]">Улюблені вправи</h2>
             <div class="w-8"></div>
         </div>
+        <div class="relative mb-6">
+            <input type="text" id="searchInput" placeholder="Пошук вправ" 
+                   class="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#622B8F]">
+            <ion-icon name="search-outline" class="absolute left-3 top-3.5 text-xl text-gray-400"></ion-icon>
+        </div>
         <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
             {% if favorite_exercises %}
                 <div class="space-y-4">
@@ -55,7 +60,7 @@
                                     <ion-icon name="fitness-outline" class="inline-block mr-1"></ion-icon>
                                     {{ exercise.muscle }}
                                 </p>
-                                <button onclick="event.stopPropagation(); toggleFavorite('{{ exercise.id }}')" 
+                                <button onclick="event.stopPropagation(); toggleFavorite('{{ exercise.id }}', this)" 
                                         class="mt-2 text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200">
                                     <ion-icon name="heart" class="text-xl"></ion-icon>
                                 </button>
@@ -103,19 +108,34 @@
     </div>
 
     <script>
-        function toggleFavorite(exerciseId) {
-            fetch(`/workouts/toggle-favorite/${exerciseId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
+        function toggleFavorite(exerciseId, button) {
+            fetch(`/toggle-favorite/${exerciseId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    const exerciseCard = button.closest('.bg-gray-50');
+                    if (data.action === 'removed') {
+                        exerciseCard.remove();
+                        const exercisesContainer = document.querySelector('.space-y-4');
+                        if (exercisesContainer && exercisesContainer.children.length === 0) {
+                            window.location.reload();
+                        }
+                    }
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
         }
 
@@ -133,6 +153,25 @@
             }
             return cookieValue;
         }
+
+        const searchInput = document.getElementById('searchInput');
+        const exercisesContainer = document.querySelector('.space-y-4');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const exercises = exercisesContainer.querySelectorAll('.bg-gray-50');
+            
+            exercises.forEach(exercise => {
+                const name = exercise.querySelector('h3').textContent.toLowerCase();
+                const muscle = exercise.querySelector('p').textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || muscle.includes(searchTerm)) {
+                    exercise.style.display = '';
+                } else {
+                    exercise.style.display = 'none';
+                }
+            });
+        });
     </script>
 </body>
 </html>
