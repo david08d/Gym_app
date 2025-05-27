@@ -1,3 +1,8 @@
+import json
+import logging
+
+from django.utils import timezone
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -6,13 +11,14 @@ from django.http import JsonResponse, request
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.generic import DetailView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from .models import Exercise, Muscle, Profile
+from .models import Exercise, Muscle, Profile, WorkoutSet, WorkoutExercise, Workout
 from .serializers import UserRegisterSerializer
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
@@ -31,6 +37,195 @@ def select_exercise_view(request):
     return render(request, 'workouts/select_exercise.html', {'exercises': exercises})
 
 
+def start_workout_view(request):
+    all_exercises = Exercise.objects.all()
+    selected_ids = request.session.get('selected_ids', [])
+    selected = Exercise.objects.filter(id__in=selected_ids)
+
+    context = {
+        'exercises': all_exercises,
+        'selected_ids': selected_ids,
+        'selected': selected
+    }
+    return render(request, 'workouts/start_workout.html', context)
+
+
+
+
+logger = logging.getLogger(__name__)
+
+
+@require_http_methods(["POST"])
+def finish_workout(request):
+    print("=" * 50)
+    print("FINISH_WORKOUT VIEW CALLED!")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User: {request.user}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    print("=" * 50)
+
+    if not request.user.is_authenticated:
+        print("User not authenticated, returning 401")
+        return JsonResponse({
+            'status': 'error',
+            'error': 'Authentication required'
+        }, status=401)
+
+    try:
+        logger.info(f"Received workout data from user: {request.user.username}")
+        logger.info(f"Request content type: {request.content_type}")
+        logger.info(f"Request body: {request.body}")
+
+        if not request.body:
+            logger.error("Empty request body")
+            return JsonResponse({
+                'status': 'error',
+                'error': 'No data received'
+            }, status=400)
+
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {e}")
+            return JsonResponse({
+                'status': 'error',
+                'error': f'Invalid JSON data: {str(e)}'
+            }, status=400)
+
+        workout_data = data.get('workoutData', [])
+        logger.info(f"Parsed workout data: {workout_data}")
+
+        if not workout_data:
+            logger.error("No workout data provided")
+            return JsonResponse({
+                'status': 'error',
+                'error': 'No workout data provided'
+            }, status=400)
+
+        
+        workout = Workout.objects.create(
+            user=request.user,
+            name=f"Workout {timezone.now().strftime('%Y-%m-%d %H:%M')}",
+            start_time=timezone.now(),
+            end_time=timezone.now(),
+            completed=True
+        )
+        logger.info(f"Created workout with ID: {workout.id}")
+
+        exercises_processed = 0
+        sets_processed = 0
+
+        for exercise_data in workout_data:
+            exercise_name = exercise_data.get('exerciseName')
+            sets_data = exercise_data.get('sets', [])
+
+            logger.info(f"Processing exercise: {exercise_name} with {len(sets_data)} sets")
+
+            if not exercise_name or not sets_data:
+                logger.warning(f"Skipping exercise due to missing data: {exercise_name}")
+                continue
+
+            try:
+                exercise = Exercise.objects.get(name=exercise_name)
+                logger.info(f"Found exercise: {exercise.name}")
+            except Exercise.DoesNotExist:
+                try:
+                    exercise = Exercise.objects.create(
+                        name=exercise_name,
+                        type="custom",
+                        muscle="unknown",
+                        equipment="unknown",
+                        created_by=request.user
+                    )
+                    logger.info(f"Created new exercise: {exercise.name}")
+                except Exception as e:
+                    logger.error(f"Error creating exercise: {e}")
+                    continue
+
+            try:
+                workout_exercise = WorkoutExercise.objects.create(
+                    workout=workout,
+                    exercise=exercise
+                )
+                exercises_processed += 1
+                logger.info(f"Created workout exercise with ID: {workout_exercise.id}")
+            except Exception as e:
+                logger.error(f"Error creating workout exercise: {e}")
+                continue
+
+            for i, set_data in enumerate(sets_data):
+                try:
+                    reps = set_data.get('reps')
+                    weight = set_data.get('weight')
+
+                    logger.info(f"Processing set {i + 1}: {reps} reps, {weight} kg")
+
+                    if reps and weight:
+                        workout_set = WorkoutSet.objects.create(
+                            workout_exercise=workout_exercise,
+                            reps=int(reps),
+                            weight=float(weight)
+                        )
+                        sets_processed += 1
+                        logger.info(f"Created workout set with ID: {workout_set.id}")
+                except Exception as e:
+                    logger.error(f"Error creating workout set: {e}")
+                    continue
+
+        try:
+            profile, created = Profile.objects.get_or_create(user=request.user)
+            profile.workout_count += 1
+            profile.save()
+            logger.info(f"Updated profile workout count to: {profile.workout_count}")
+        except Exception as e:
+            logger.error(f"Error updating profile: {e}")
+
+        logger.info(f"Workout completed: {exercises_processed} exercises, {sets_processed} sets")
+
+        request.session['selected_ids'] = []
+
+        response_data = {
+            'status': 'success',
+            'message': 'Workout saved successfully',
+            'workout_id': workout.id,
+            'exercises_processed': exercises_processed,
+            'sets_processed': sets_processed,
+            'redirect': '/main/'
+        }
+
+        print("=" * 30)
+        print("RETURNING SUCCESS RESPONSE:")
+        print(response_data)
+        print("=" * 30)
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        logger.error(f"Unexpected error in finish_workout: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+
+        error_response = {
+            'status': 'error',
+            'error': f'An error occurred: {str(e)}'
+        }
+
+        print("=" * 30)
+        print("RETURNING ERROR RESPONSE:")
+        print(error_response)
+        print("=" * 30)
+
+        return JsonResponse(error_response, status=500)
+
+
+@require_POST
+def add_exercise(request, exercise_id):
+    selected = request.session.get('selected_ids', [])
+    if exercise_id not in selected:
+        selected.append(exercise_id)
+    request.session['selected_ids'] = selected
+    return JsonResponse({'status': 'ok'})
 
 
 @login_required
@@ -74,7 +269,7 @@ def check_email_view(request):
 def register(request):
     if request.method == 'GET':
         return render(request, 'workouts/register.html')
-        serializer = UserRegisterSerializer(data=request.data)
+    serializer = UserRegisterSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
         token, _ = Token.objects.get_or_create(user=user)
@@ -85,7 +280,7 @@ def register(request):
             "token": token.key,
             "redirect": "/main/"
         })
-
+    
     errors = {}
     if 'username' in serializer.errors:
         errors['username'] = 'Username is already taken'
@@ -105,7 +300,7 @@ def login_view(request):
 
     email = request.data.get('email')
     password = request.data.get('password')
-
+    
     try:
         user = User.objects.get(email=email)
         if user.check_password(password):
@@ -118,7 +313,7 @@ def login_view(request):
             })
     except User.DoesNotExist:
         pass
-
+    
     return JsonResponse({
         'success': False,
         'error': 'Invalid email or password'
@@ -201,8 +396,7 @@ def exercise_detail(request, pk):
     exercise = get_object_or_404(Exercise, pk=pk)
     return render(request, 'workouts/exercise_detail.html', {'exercise': exercise})
 
-# def profile_page(request):
-#     return render(request, 'workouts/profile.html')
+
 
 def logout_view(request):
     logout(request)
@@ -216,6 +410,6 @@ def profile_page(request):
             profile = request.user.profile
             profile.photo = photo
             profile.save()
-        return render(request, ('workouts/profile.html'))  # або ім'я URL сторінки профілю
+        return render(request, ('workouts/profile.html')) 
 
     return render(request, 'workouts/profile.html')

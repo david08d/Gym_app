@@ -1,0 +1,388 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Start Workout - Repx</title>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ::-webkit-scrollbar { display: none; }
+    input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+  </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-4 flex flex-col overflow-hidden relative">
+
+    <div class="flex justify-start items-center mb-2">
+      <img src="{% static 'img/logo_gymR.png' %}" alt="Logo" class="w-[100px] h-[70px]">
+    </div>
+
+    <!-- Timer Centered -->
+    <div class="flex justify-center items-center mb-4">
+      <div id="timer" class="text-4xl font-bold font-mono text-[#622B8F]">00:00:00</div>
+    </div>
+
+    <!-- Search -->
+    <input
+      type="search"
+      id="exerciseSearch"
+      placeholder="Search exercises..."
+      class="w-full p-2 mb-3 border border-gray-300 rounded"
+    />
+
+    <!-- Exercise List -->
+    <div id="exerciseList" class="overflow-y-auto h-[260px] pr-1 space-y-2">
+      {% for exercise in exercises %}
+      <div class="exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer bg-white shadow-sm"
+           style="width: 430px; height: 74px; overflow: hidden;" data-name="{{ exercise.name }}"
+           onclick="addExercise('{{ exercise.name }}', '{{ exercise.gif_url|default:'' }}', '{{ exercise.muscle}}')">
+        {% if exercise.gif_url %}
+          <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded bg-gray-200">
+        {% else %}
+          <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
+            <ion-icon name="barbell-outline"></ion-icon>
+          </div>
+        {% endif %}
+        <div class="flex-1">
+          <h3 class="font-medium text-sm truncate max-w-[200px]">{{ exercise.name }}</h3>
+          <p class="text-sm text-[#622B8F] truncate max-w-[150px]">{{ exercise.muscle }}</p>
+        </div>
+        <button onclick="event.stopPropagation(); addExercise('{{ exercise.name }}', '{{ exercise.gif_url|default:'' }}', '{{ exercise.muscle }}')" class="text-[#622B8F] text-sm font-semibold">+ Add</button>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Selected Exercises -->
+    <h3 class="text-sm font-semibold mt-4">Workout Plan</h3>
+    <div id="selectedExercises" class="overflow-y-auto mt-2 h-[180px] space-y-4 pr-2">
+      <!-- Selected exercises will appear here -->
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-between space-x-2 mt-auto">
+      <button onclick="cancelWorkout()" class="flex-1 py-2 bg-gray-200 text-gray-600 rounded">Cancel</button>
+      <button onclick="finishWorkout()" class="flex-1 py-2 bg-[#622B8F] text-white rounded">Finish</button>
+    </div>
+
+  </div>
+
+  <script>
+    let startTime = new Date();
+    let timerInterval = setInterval(() => {
+      const now = new Date();
+      const diff = now - startTime;
+      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      document.getElementById('timer').textContent = `${h}:${m}:${s}`;
+    }, 1000);
+
+    function cancelWorkout() {
+      clearInterval(timerInterval);
+      window.location.href = "{% url 'main' %}";
+    }
+
+    // Function to get CSRF token from cookie or meta tag
+    function getCSRFToken() {
+      // First try to get from meta tag
+      const metaToken = document.querySelector('meta[name="csrf-token"]');
+      if (metaToken) {
+        return metaToken.getAttribute('content');
+      }
+
+      // Fallback to cookie method
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          cookie = cookie.trim();
+          if (cookie.startsWith('csrftoken=')) {
+            cookieValue = decodeURIComponent(cookie.substring('csrftoken='.length));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    async function finishWorkout() {
+      console.log('Starting finishWorkout function');
+      clearInterval(timerInterval);
+
+      const workoutData = [];
+      const selectedExercises = document.querySelectorAll('#selectedExercises > div');
+
+      console.log('Found selected exercises:', selectedExercises.length);
+
+      selectedExercises.forEach((exerciseCard, index) => {
+        console.log(`Processing exercise ${index + 1}`);
+
+        const exerciseName = exerciseCard.querySelector('h4').textContent;
+        console.log('Exercise name:', exerciseName);
+
+        const sets = [];
+        const setsContainer = exerciseCard.querySelector('.space-y-2');
+
+        if (setsContainer) {
+          const setRows = setsContainer.querySelectorAll('div.flex');
+          console.log('Found set rows:', setRows.length);
+
+          setRows.forEach((setRow, setIndex) => {
+            const repsInput = setRow.querySelector('input[placeholder="Reps"]');
+            const weightInput = setRow.querySelector('input[placeholder="Weight (kg)"]');
+
+            if (repsInput && weightInput) {
+              const reps = repsInput.value;
+              const weight = weightInput.value;
+
+              console.log(`Set ${setIndex + 1}: ${reps} reps, ${weight} kg`);
+
+              if (reps && weight) {
+                sets.push({
+                  reps: parseInt(reps),
+                  weight: parseFloat(weight)
+                });
+              }
+            }
+          });
+        }
+
+        if (sets.length > 0) {
+          workoutData.push({
+            exerciseName: exerciseName,
+            sets: sets,
+          });
+        }
+      });
+
+      console.log('Final workout data:', workoutData);
+
+      if (workoutData.length === 0) {
+        alert('Please add some exercises and sets before finishing your workout!');
+        return;
+      }
+
+      const csrfToken = getCSRFToken();
+      if (!csrfToken) {
+        alert('CSRF token not found. Please reload the page and try again.');
+        return;
+      }
+
+      try {
+        console.log('Sending data to server...');
+        console.log('URL:', "{% url 'finish_workout' %}");
+        console.log('CSRF Token:', csrfToken);
+
+        const response = await fetch("{% url 'finish_workout' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ workoutData }),
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+
+        // Check for specific error statuses
+        if (response.status === 403) {
+          console.error('403 Forbidden - CSRF or authentication problem');
+          alert('Authentication error. Please reload the page and try again.');
+          return;
+        }
+
+        if (response.status === 401) {
+          console.error('401 Unauthorized - User not authenticated');
+          alert('Please log in to save your workout.');
+          return;
+        }
+
+        // Get response text first to see what we're actually receiving
+        const responseText = await response.text();
+        console.log('Response text (first 500 chars):', responseText.substring(0, 500));
+        console.log('Response content-type:', response.headers.get('content-type'));
+
+        // Try to parse as JSON only if content-type indicates JSON
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            result = JSON.parse(responseText);
+            console.log('Parsed JSON:', result);
+          } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            alert('Server returned invalid JSON. Check console for details.');
+            return;
+          }
+        } else {
+          console.error('Server returned HTML instead of JSON');
+          console.error('This usually means there\'s an error in the Django view or URL routing');
+          alert('Server error: Expected JSON response but got HTML. Check server logs.');
+          return;
+        }
+
+        if (response.ok && result.status === 'success') {
+          alert('Workout saved successfully!');
+          window.location.href = "{% url 'main' %}";
+        } else {
+          alert('Error saving workout: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Network error:', error);
+        alert('Network error: ' + error.message);
+      }
+    }
+
+    const selectedNames = new Set();
+
+    // Input validation: only digits for reps, digits and "." for weight
+    function validateInput(e, type) {
+      const val = e.target.value;
+      if (type === 'reps') {
+        e.target.value = val.replace(/[^0-9]/g, '');
+      } else if (type === 'weight') {
+        let newVal = val.replace(/[^0-9.]/g, '');
+        const parts = newVal.split('.');
+        if (parts.length > 2) {
+          newVal = parts[0] + '.' + parts.slice(1).join('');
+        }
+        e.target.value = newVal;
+      }
+    }
+
+    function addExercise(name, gif, muscle) {
+      if (selectedNames.has(name)) return;
+
+      selectedNames.add(name);
+
+      const selectedContainer = document.getElementById('selectedExercises');
+
+      const card = document.createElement('div');
+      card.className = "bg-white p-3 rounded-lg shadow-md flex space-x-4 items-start";
+
+      const img = document.createElement('img');
+      img.src = gif || 'https://via.placeholder.com/48?text=No+Image';
+      img.alt = name;
+      img.className = "w-14 h-14 object-cover rounded bg-gray-200 flex-shrink-0 mt-1";
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = "flex-1 flex flex-col";
+
+      const titleRow = document.createElement('div');
+      titleRow.className = "flex justify-between items-center mb-1";
+
+      const title = document.createElement('h4');
+      title.className = "font-semibold text-lg text-gray-800";
+      title.textContent = name;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = 'Remove';
+      removeBtn.className = "ml-4 px-2 py-0.5 bg-[#622B8F]/70 hover:bg-[#622B8F] text-white rounded text-xs font-semibold flex-shrink-0 transition";
+      removeBtn.onclick = () => {
+        selectedContainer.removeChild(card);
+        selectedNames.delete(name);
+      };
+
+      titleRow.appendChild(title);
+      titleRow.appendChild(removeBtn);
+
+      const muscleDiv = document.createElement('div');
+      muscleDiv.className = "text-sm text-[#622B8F] mb-2 italic";
+      muscleDiv.textContent = `Muscle: ${muscle}`;
+
+      const setsContainer = document.createElement('div');
+      setsContainer.className = "space-y-2";
+
+      function createSetRow(setNum) {
+        const setRow = document.createElement('div');
+        setRow.className = "flex space-x-2 items-center";
+
+        const setLabel = document.createElement('label');
+        setLabel.textContent = `Set ${setNum}:`;
+        setLabel.className = "w-12 text-sm text-gray-700";
+
+        const repsInput = document.createElement('input');
+        repsInput.type = 'number';
+        repsInput.min = '1';
+        repsInput.placeholder = 'Reps';
+        repsInput.className = "w-16 p-1 border border-gray-300 rounded text-center text-sm";
+        repsInput.addEventListener('input', e => validateInput(e, 'reps'));
+
+        const weightInput = document.createElement('input');
+        weightInput.type = 'text';
+        weightInput.placeholder = 'Weight (kg)';
+        weightInput.className = "w-24 p-1 border border-gray-300 rounded text-center text-sm";
+        weightInput.addEventListener('input', e => validateInput(e, 'weight'));
+
+        // Delete set button
+        const deleteSetBtn = document.createElement('button');
+        deleteSetBtn.textContent = '×';
+        deleteSetBtn.title = 'Remove Set';
+        deleteSetBtn.className = "ml-2 w-6 h-6 flex items-center justify-center bg-[#622B8F]/70 hover:bg-[#622B8F] text-white rounded-full text-sm font-bold transition";
+        deleteSetBtn.onclick = () => {
+          setsContainer.removeChild(setRow);
+          // Renumber sets after deletion
+          Array.from(setsContainer.children).forEach((child, idx) => {
+            child.querySelector('label').textContent = `Set ${idx + 1}:`;
+          });
+        };
+
+        setRow.appendChild(setLabel);
+        setRow.appendChild(repsInput);
+        setRow.appendChild(weightInput);
+        setRow.appendChild(deleteSetBtn);
+
+        return setRow;
+      }
+
+      // Create initial 3 sets
+      for (let i = 1; i <= 3; i++) {
+        setsContainer.appendChild(createSetRow(i));
+      }
+
+      const addSetBtn = document.createElement('button');
+      addSetBtn.textContent = "+ Add Set";
+      addSetBtn.className = "mt-1 self-start text-[#622B8F] font-semibold text-sm hover:underline";
+      addSetBtn.onclick = () => {
+        const currentSets = setsContainer.children.length;
+        if (currentSets < 50) {
+          setsContainer.appendChild(createSetRow(currentSets + 1));
+        } else {
+          alert("Maximum 50 sets allowed.");
+        }
+      };
+
+      infoDiv.appendChild(titleRow);
+      infoDiv.appendChild(muscleDiv);
+      infoDiv.appendChild(setsContainer);
+      infoDiv.appendChild(addSetBtn);
+
+      card.appendChild(img);
+      card.appendChild(infoDiv);
+
+      selectedContainer.appendChild(card);
+    }
+
+    // Search functionality
+    document.getElementById('exerciseSearch').addEventListener('input', function() {
+      const query = this.value.toLowerCase();
+      const exercises = document.querySelectorAll('#exerciseList .exercise-item');
+
+      exercises.forEach(exercise => {
+        const name = exercise.getAttribute('data-name').toLowerCase();
+        if (name.includes(query)) {
+          exercise.style.display = 'flex';
+        } else {
+          exercise.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

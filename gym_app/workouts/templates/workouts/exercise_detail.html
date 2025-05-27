@@ -5,23 +5,15 @@
     <meta charset="UTF-8">
     <title>{{ exercise.name }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png">F
+    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png">
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col relative overflow-hidden">
-
-
         <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
             <img src="{% static 'img/logo_gymR.png' %}" alt="Логотип" class="h-12">
         </div>
-
-
         <div class="mt-20 flex flex-col space-y-4 flex-grow">
-
-
             <h1 class="text-2xl font-bold text-center text-black">{{ exercise.name }}</h1>
-
-
             {% if exercise.gif_url %}
                 <img src="{{ exercise.gif_url }}" alt="GIF вправи" class="rounded-xl border h-64 object-cover">
             {% else %}
@@ -29,16 +21,12 @@
                     <span class="text-gray-500">GIF відсутній</span>
                 </div>
             {% endif %}
-
-
             <div class="space-y-1 text-gray-800 text-base">
                 <p><strong>Тип:</strong> {{ exercise.type }}</p>
                 <p><strong>М'язи:</strong> {{ exercise.muscle }}</p>
                 <p><strong>Обладнання:</strong> {{ exercise.equipment }}</p>
                 <p><strong>Частина тіла:</strong> {{ exercise.body_part }}</p>
             </div>
-
-
             {% if exercise.instructions %}
                 <div>
                     <h2 class="text-lg font-semibold">Відео інструкція</h2>
@@ -48,14 +36,11 @@
                 </div>
             {% endif %}
         </div>
-
-
         <div class="mt-4">
             <a href="{% url 'exercise_page' %}" class="block text-center bg-black text-white py-2 px-4 rounded-xl hover:bg-gray-800">
                 ← Назад
             </a>
         </div>
-
     </div>
 </body>
 </html>

@@ -18,32 +18,20 @@
 </style>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col">
-
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-xl font-bold">Exercises</h1>
         </div>
-
-
         <div class="relative mb-6">
-            <input type="text"
-                   placeholder="Search exercise"
-                   class="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#622B8F]">
+            <input type="text" placeholder="Search exercise" class="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#622B8F]">
             <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
         </div>
-
-
         <div class="flex space-x-4 mb-6 overflow-x-auto py-2">
             <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-full whitespace-nowrap">Equipment</button>
             <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-full whitespace-nowrap">Muscles</button>
         </div>
-
-
-
         <div class="flex-1 overflow-y-auto">
-
-
             <div class="mb-6">
                 <h2 class="text-[#622B8F] font-semibold mb-4">Popular</h2>
                 <div class="space-y-4">
@@ -66,10 +54,7 @@
                     {% endfor %}
                 </div>
             </div>
-
-
             {% for category in categories %}
-
             <div class="mb-6">
                 <h2 class="text-[#622B8F] font-semibold mb-4">{{ category.name }}</h2>
                 <div class="space-y-4">
@@ -89,16 +74,11 @@
                             </div>
                         </div>
                     </a>
-
                     {% endfor %}
                 </div>
             </div>
             {% endfor %}
-
         </div>
-
-
-
         <div class="mt-auto">
             <div class="flex justify-around items-center bg-white rounded-full p-4 shadow-lg">
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
@@ -123,41 +103,33 @@
             </div>
         </div>
     </div>
-        <script>
+    <script>
     const searchInput = document.querySelector('input[type="text"]');
-    const categoriesContainer = document.querySelector('.flex-1'); // Container with categories
-
+    const categoriesContainer = document.querySelector('.flex-1');
     searchInput.addEventListener('input', async (e) => {
         const searchTerm = e.target.value.trim();
-
         if (!searchTerm) {
-            location.reload();  // Якщо пошук пустий — перезавантажити, щоб повернути початковий стан
+            location.reload();
             return;
         }
-
         const response = await fetch(`?search=${encodeURIComponent(searchTerm)}`);
         const data = await response.json();
         categoriesContainer.innerHTML = '';
-
         for (const [categoryName, exercises] of Object.entries(data.categories)) {
             const categoryDiv = document.createElement('div');
             categoryDiv.classList.add('mb-6');
-
             const heading = document.createElement('h2');
             heading.className = "text-[#622B8F] font-semibold mb-4";
             heading.textContent = categoryName;
             categoryDiv.appendChild(heading);
-
             const exerciseList = document.createElement('div');
             exerciseList.classList.add('space-y-4');
-
             exercises.forEach(exercise => {
                 const exerciseItem = document.createElement('div');
                 exerciseItem.className = "exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer";
                 exerciseItem.style.width = "430px";
                 exerciseItem.style.height = "74px";
                 exerciseItem.style.overflow = "hidden";
-
                 if (exercise.gif_url) {
                     exerciseItem.innerHTML = `
                         <img src="${exercise.gif_url}" alt="${exercise.name}" class="w-12 h-12 object-cover rounded bg-gray-200">
@@ -177,17 +149,12 @@
                         </div>
                     `;
                 }
-
                 exerciseList.appendChild(exerciseItem);
             });
-
             categoryDiv.appendChild(exerciseList);
             categoriesContainer.appendChild(categoryDiv);
         }
     });
-
-
-
-</script>
+    </script>
 </body>
 </html>
