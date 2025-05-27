@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Улюблені вправи - Repx</title>
+    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png" />
+    <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #622B8F;
+            border-radius: 2px;
+        }
+        
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #622B8F transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <div class="w-8"></div>
+            <h2 class="text-2xl font-bold text-[#622B8F]">Улюблені вправи</h2>
+            <div class="w-8"></div>
+        </div>
+        <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            {% if favorite_exercises %}
+                <div class="space-y-4">
+                    {% for exercise in favorite_exercises %}
+                    <div class="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                         onclick="window.location.href='{% url 'exercise_detail' exercise.id %}'">
+                        <div class="flex items-start space-x-4">
+                            {% if exercise.gif_url %}
+                            <div class="w-24 h-24 flex-shrink-0">
+                                <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-full h-full object-cover rounded-lg">
+                            </div>
+                            {% endif %}
+                            <div class="flex-1">
+                                <h3 class="font-medium text-gray-800">{{ exercise.name }}</h3>
+                                <p class="text-sm text-[#622B8F] mt-1">
+                                    <ion-icon name="fitness-outline" class="inline-block mr-1"></ion-icon>
+                                    {{ exercise.muscle }}
+                                </p>
+                                <button onclick="event.stopPropagation(); toggleFavorite('{{ exercise.id }}')" 
+                                        class="mt-2 text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200">
+                                    <ion-icon name="heart" class="text-xl"></ion-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="flex flex-col items-center justify-center h-full text-center">
+                    <ion-icon name="heart-outline" class="text-6xl text-[#622B8F] mb-4"></ion-icon>
+                    <p class="text-gray-600">У вас ще немає вподобаних вправ</p>
+                </div>
+            {% endif %}
+        </div>
+        <footer class="mt-6">
+            <div class="flex justify-around items-center bg-white rounded-full p-3 shadow-lg">
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="home-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'exercise_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="add-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'favorite_exercises' %}" class="nav-link block p-2 text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'profile_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="person-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function toggleFavorite(exerciseId) {
+            fetch(`/workouts/toggle-favorite/${exerciseId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

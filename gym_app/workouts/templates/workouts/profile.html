@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Профіль - Repx</title>
+    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png" />
+    <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #622B8F;
+            border-radius: 2px;
+        }
+        
+        
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #622B8F transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <img src="{% static 'img/logo_gymR.png' %}" alt="Logo" class="w-[100px] h-[70px]" />
+            <a href="{% url 'logout' %}" class="text-red-500 hover:text-red-600 transition-colors duration-200">
+                <ion-icon name="log-out-outline" class="text-2xl"></ion-icon>
+            </a>
+        </div>
+        <h2 class="text-2xl font-bold text-center text-[#622B8F] mb-6">Профіль</h2>
+        <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            <div class="space-y-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            {% if user.profile.photo %}
+                                <img src="{{ user.profile.photo.url }}" alt="Profile Image"
+                                     class="w-16 h-16 object-cover rounded-full border-2 border-[#622B8F]" />
+                            {% else %}
+                                <div class="w-16 h-16 bg-[#622B8F] rounded-full flex items-center justify-center">
+                                    <ion-icon name="person" class="text-3xl text-white"></ion-icon>
+                                </div>
+                            {% endif %}
+                            <label for="profile_image"
+                                   class="absolute -bottom-1 -right-1 bg-[#622B8F] hover:bg-[#4e2372] cursor-pointer rounded-full p-1.5 shadow-md border-2 border-white">
+                                <ion-icon name="camera" class="text-white text-sm"></ion-icon>
+                            </label>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-800">{{ user.username }}</h3>
+                            <p class="text-sm text-gray-600">{{ user.email }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Статистика</h3>
+                    
+                    <!-- Main Stats -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center">
+                            <a href="{% url 'workout_detail' workout_details.0.id %}" class="inline-flex flex-col items-center text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200">
+                                <p class="text-2xl font-bold">{{ total_exercises }}</p>
+                                <p class="text-sm text-gray-600">Виконаних вправ</p>
+                            </a>
+                        </div>
+                        <div class="text-center">
+                            <a href="{% url 'favorite_exercises' %}" class="inline-flex flex-col items-center text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200">
+                                <p class="text-2xl font-bold">{{ favorite_exercises_count }}</p>
+                                <p class="text-sm text-gray-600">Вподобаних вправ</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="mt-6">
+            <div class="flex justify-around items-center bg-white rounded-full p-3 shadow-lg">
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="home-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'exercise_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="add-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'favorite_exercises' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'profile_page' %}" class="nav-link block p-2 text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="person-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="uploadForm" class="hidden">
+        {% csrf_token %}
+        <input type="file" name="profile_image" id="profile_image" accept="image/*" onchange="this.form.submit()" />
+    </form>
+</body>
+</html>

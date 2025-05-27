@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Деталі тренування - Repx</title>
+    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png" />
+    <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #622B8F;
+            border-radius: 2px;
+        }
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #622B8F transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <a href="{% url 'profile_page' %}" class="text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200">
+                <ion-icon name="arrow-back" class="text-2xl"></ion-icon>
+            </a>
+            <h2 class="text-2xl font-bold text-[#622B8F]">Деталі тренувань</h2>
+            <div class="w-8"></div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            <div class="space-y-6">
+                {% for workout in workouts %}
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-medium text-gray-800">{{ workout.name }}</h3>
+                            <p class="text-sm text-gray-600">
+                                <ion-icon name="calendar-outline" class="inline-block mr-1"></ion-icon>
+                                {{ workout.start_time|date:"d.m.Y" }}
+                                <ion-icon name="time-outline" class="inline-block ml-2 mr-1"></ion-icon>
+                                {{ workout.start_time|date:"H:i" }}
+                            </p>
+                        </div>
+                        {% if workout.duration %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-[#622B8F]">
+                                <ion-icon name="timer-outline" class="inline-block mr-1"></ion-icon>
+                                {{ workout.duration }} хв
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="space-y-4">
+                        {% for exercise in workout.exercises %}
+                        <div class="bg-white rounded-lg p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-medium text-gray-800">{{ exercise.name }}</h4>
+                                <span class="text-xs text-[#622B8F]">
+                                    <ion-icon name="fitness-outline" class="inline-block mr-1"></ion-icon>
+                                    {{ exercise.muscle }}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                {% for set in exercise.sets %}
+                                <div class="flex justify-between items-center bg-gray-50 rounded p-2">
+                                    <div class="flex items-center">
+                                        <ion-icon name="repeat-outline" class="text-[#622B8F] mr-2"></ion-icon>
+                                        <span class="text-sm text-gray-600">Підхід {{ forloop.counter }}</span>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center">
+                                            <span class="text-sm text-gray-800">{{ set.reps }} повторів</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="text-sm text-gray-800">{{ set.weight }} кг</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <footer class="mt-6">
+            <div class="flex justify-around items-center bg-white rounded-full p-3 shadow-lg">
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="home-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'exercise_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="add-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'favorite_exercises' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+                <a href="{% url 'profile_page' %}" class="nav-link block p-2 text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="person-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html> 
