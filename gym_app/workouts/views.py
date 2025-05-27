@@ -36,7 +36,6 @@ def select_exercise_view(request):
     exercises = Exercise.objects.all()
     return render(request, 'workouts/select_exercise.html', {'exercises': exercises})
 
-
 def start_workout_view(request):
     all_exercises = Exercise.objects.all()
     selected_ids = request.session.get('selected_ids', [])
@@ -53,7 +52,6 @@ def start_workout_view(request):
 
 
 logger = logging.getLogger(__name__)
-
 
 @require_http_methods(["POST"])
 def finish_workout(request):
@@ -218,7 +216,6 @@ def finish_workout(request):
 
         return JsonResponse(error_response, status=500)
 
-
 @require_POST
 def add_exercise(request, exercise_id):
     selected = request.session.get('selected_ids', [])
@@ -226,7 +223,6 @@ def add_exercise(request, exercise_id):
         selected.append(exercise_id)
     request.session['selected_ids'] = selected
     return JsonResponse({'status': 'ok'})
-
 
 @login_required
 class ExerciseDetailView(DetailView):
@@ -387,6 +383,7 @@ def exercise_page(request):
     context = {
         'popular_exercises': popular_exercises,
         'categories': categories,
+        'request': request,
     }
 
     return render(request, 'workouts/exercise.html', context)
@@ -402,7 +399,7 @@ def logout_view(request):
     logout(request)
     return render(request, 'workouts/home.html')
 
-login_required
+@login_required
 def profile_page(request):
     if request.method == 'POST':
         photo = request.FILES.get('profile_image')
@@ -410,6 +407,151 @@ def profile_page(request):
             profile = request.user.profile
             profile.photo = photo
             profile.save()
-        return render(request, ('workouts/profile.html')) 
+    
+    # Отримуємо завершені тренування (completed=True або end_time не None)
+    completed_workouts = Workout.objects.filter(
+        user=request.user
+    ).filter(
+        Q(completed=True) | Q(end_time__isnull=False)
+    ).order_by('-start_time')[:5]
+    
+    # Підраховуємо загальну кількість виконаних вправ
+    total_exercises = WorkoutExercise.objects.filter(
+        workout__in=Workout.objects.filter(
+            user=request.user
+        ).filter(
+            Q(completed=True) | Q(end_time__isnull=False)
+        )
+    ).count()
+    
+    workout_details = []
+    
+    for workout in completed_workouts:
+        exercises = WorkoutExercise.objects.filter(workout=workout)
+        exercise_details = []
+        
+        for workout_exercise in exercises:
+            sets = WorkoutSet.objects.filter(workout_exercise=workout_exercise).order_by('id')
+            if sets.exists():
+                sets_info = []
+                for set in sets:
+                    sets_info.append({
+                        'reps': set.reps,
+                        'weight': set.weight
+                    })
+                exercise_details.append({
+                    'name': workout_exercise.exercise.name,
+                    'muscle': workout_exercise.exercise.muscle,
+                    'is_favorite': workout_exercise.exercise in request.user.profile.favorite_exercises.all(),
+                    'sets': sets_info
+                })
+        
+        # Розраховуємо тривалість тренування
+        duration = None
+        if workout.end_time and workout.start_time:
+            duration = int((workout.end_time - workout.start_time).total_seconds() / 60)
+        
+        workout_details.append({
+            'id': workout.id,
+            'name': workout.name,
+            'start_time': workout.start_time,
+            'duration': duration,
+            'exercises': exercise_details
+        })
 
-    return render(request, 'workouts/profile.html')
+    context = {
+        'user': request.user,
+        'workout_details': workout_details,
+        'completed_workouts_count': Workout.objects.filter(
+            user=request.user
+        ).filter(
+            Q(completed=True) | Q(end_time__isnull=False)
+        ).count(),
+        'favorite_exercises_count': request.user.profile.favorite_exercises.count(),
+        'total_exercises': total_exercises
+    }
+    
+    return render(request, 'workouts/profile.html', context)
+
+
+
+
+@login_required
+def favorite_exercises(request):
+    favorite_exercises = request.user.profile.favorite_exercises.all()
+    exercises_data = []
+    
+    for exercise in favorite_exercises:
+        exercises_data.append({
+            'id': exercise.id,
+            'name': exercise.name,
+            'muscle': exercise.muscle,
+            'gif_url': exercise.gif_url
+        })
+    
+    return render(request, 'workouts/favorite_exercises.html', {
+        'favorite_exercises': exercises_data
+    })
+
+@login_required
+@require_POST
+def toggle_favorite(request, exercise_id):
+    exercise = get_object_or_404(Exercise, id=exercise_id)
+    profile = request.user.profile
+    if exercise in profile.favorite_exercises.all():
+        profile.favorite_exercises.remove(exercise)
+        return JsonResponse({'success': True, 'action': 'removed'})
+    else:
+        profile.favorite_exercises.add(exercise)
+        return JsonResponse({'success': True, 'action': 'added'})
+
+@login_required
+def workout_detail(request, workout_id):
+    # Отримуємо всі завершені тренування користувача
+    workouts = Workout.objects.filter(
+        user=request.user
+    ).filter(
+        Q(completed=True) | Q(end_time__isnull=False)
+    ).order_by('-start_time')
+    
+    workout_details = []
+    
+    for workout in workouts:
+        exercises = WorkoutExercise.objects.filter(workout=workout)
+        exercise_details = []
+        
+        for workout_exercise in exercises:
+            sets = WorkoutSet.objects.filter(workout_exercise=workout_exercise).order_by('id')
+            if sets.exists():
+                sets_info = []
+                for set in sets:
+                    sets_info.append({
+                        'id': set.id,
+                        'reps': set.reps,
+                        'weight': set.weight
+                    })
+                exercise_details.append({
+                    'id': workout_exercise.id,
+                    'name': workout_exercise.exercise.name,
+                    'muscle': workout_exercise.exercise.muscle,
+                    'sets': sets_info
+                })
+        
+        # Розраховуємо тривалість тренування
+        duration = None
+        if workout.end_time and workout.start_time:
+            duration = int((workout.end_time - workout.start_time).total_seconds() / 60)
+        
+        workout_details.append({
+            'id': workout.id,
+            'name': workout.name,
+            'start_time': workout.start_time,
+            'duration': duration,
+            'exercises': exercise_details
+        })
+    
+    context = {
+        'workouts': workout_details
+    }
+    
+    return render(request, 'workouts/workout_detail.html', context)

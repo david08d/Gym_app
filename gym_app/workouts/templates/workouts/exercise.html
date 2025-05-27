@@ -1,160 +1,190 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exercises - Repx</title>
-    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Вправи - Repx</title>
+    <link rel="icon" href="{% static 'img/logo_gymR.png' %}" type="image/png" />
+    <link href="{% static 'css/output.css' %}" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #622B8F;
+            border-radius: 2px;
+        }
+        
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #622B8F transparent;
+        }
+    </style>
 </head>
-<style>
-    ion-icon {
-        width: 24px;
-        height: 24px;
-    }
-</style>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="w-[390px] h-[844px] bg-white/90 backdrop-blur-md rounded-[45px] border-4 border-black shadow-2xl p-6 flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold">Exercises</h1>
+        <div class="flex justify-start mb-4">
+            <img src="{% static 'img/logo_gymR.png' %}" alt="Logo" class="w-[100px] h-[70px]" />
         </div>
+        <h2 class="text-2xl font-bold text-center text-[#622B8F] mb-6">Вправи</h2>
         <div class="relative mb-6">
-            <input type="text" placeholder="Search exercise" class="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#622B8F]">
-            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
+            <input type="text" id="searchInput" placeholder="Пошук вправ" 
+                   class="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#622B8F]">
+            <ion-icon name="search-outline" class="absolute left-3 top-3.5 text-xl text-gray-400"></ion-icon>
         </div>
-        <div class="flex space-x-4 mb-6 overflow-x-auto py-2">
-            <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-full whitespace-nowrap">Equipment</button>
-            <button class="px-6 py-2 bg-gray-200 text-gray-700 rounded-full whitespace-nowrap">Muscles</button>
-        </div>
-        <div class="flex-1 overflow-y-auto">
-            <div class="mb-6">
-                <h2 class="text-[#622B8F] font-semibold mb-4">Popular</h2>
-                <div class="space-y-4">
-                    {% for exercise in popular_exercises %}
-                        <a href="{% url 'exercise_detail' exercise.id %}" class="block">
-                            <div class="exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer" style="width: 430px; height: 74px; overflow: hidden;" >
+        <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            <div class="space-y-6">
+                {% if popular_exercises %}
+                <div class="category-section">
+                    <h3 class="text-lg font-semibold text-[#622B8F] mb-3">Популярні вправи</h3>
+                    <div class="space-y-3">
+                        {% for exercise in popular_exercises %}
+                        <div class="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors duration-200" 
+                             onclick="window.location.href='{% url 'exercise_detail' exercise.id %}'">
+                            <div class="flex items-start space-x-4">
                                 {% if exercise.gif_url %}
-                                <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded bg-gray-200">
-                                {% else %}
-                                <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
-                                    <ion-icon name="barbell-outline"></ion-icon>
+                                <div class="w-24 h-24 flex-shrink-0">
+                                    <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-full h-full object-cover rounded-lg">
                                 </div>
                                 {% endif %}
-                                <div>
-                                    <h3 class="font-medium text-sm truncate max-w-[200px]">{{ exercise.name }}</h3>
-                                    <p class="text-sm text-[#622B8F] truncate max-w-[150px]">{{ exercise.muscle }}</p>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-base font-medium text-gray-800">{{ exercise.name }}</h4>
+                                            <p class="text-sm text-gray-600">{{ exercise.muscle }}</p>
+                                        </div>
+                                        <button onclick="event.stopPropagation(); toggleFavorite({{ exercise.id }}, event)" 
+                                                class="text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200 flex-shrink-0">
+                                            <ion-icon name="{% if exercise in request.user.profile.favorite_exercises.all %}heart{% else %}heart-outline{% endif %}" 
+                                                     class="text-2xl"></ion-icon>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </a>
-                    {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
-            {% for category in categories %}
-            <div class="mb-6">
-                <h2 class="text-[#622B8F] font-semibold mb-4">{{ category.name }}</h2>
-                <div class="space-y-4">
-                    {% for exercise in category.exercises %}
-                    <a href="{% url 'exercise_detail' exercise.id %}" class="block">
-                        <div class="exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer" style="width: 430px; height: 74px; overflow: hidden;">
-                            {% if exercise.gif_url %}
-                            <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-12 h-12 object-cover rounded bg-gray-200">
-                            {% else %}
-                            <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
-                                <ion-icon name="barbell-outline"></ion-icon>
-                            </div>
-                            {% endif %}
-                            <div>
-                                <h3 class="font-medium text-sm truncate max-w-[200px]">{{ exercise.name }}</h3>
-                                <p class="text-sm text-[#622B8F] truncate max-w-[150px]">{{ exercise.muscle }}</p>
+                {% endif %}
+                {% for category in categories %}
+                <div class="category-section">
+                    <h3 class="text-lg font-semibold text-[#622B8F] mb-3">{{ category.name }}</h3>
+                    <div class="space-y-3">
+                        {% for exercise in category.exercises %}
+                        <div class="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors duration-200" 
+                             onclick="window.location.href='{% url 'exercise_detail' exercise.id %}'">
+                            <div class="flex items-start space-x-4">
+                                {% if exercise.gif_url %}
+                                <div class="w-24 h-24 flex-shrink-0">
+                                    <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}" class="w-full h-full object-cover rounded-lg">
+                                </div>
+                                {% endif %}
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-base font-medium text-gray-800">{{ exercise.name }}</h4>
+                                            <p class="text-sm text-gray-600">{{ exercise.muscle }}</p>
+                                        </div>
+                                        <button onclick="event.stopPropagation(); toggleFavorite({{ exercise.id }}, event)" 
+                                                class="text-[#622B8F] hover:text-[#4a1f6b] transition-colors duration-200 flex-shrink-0">
+                                            <ion-icon name="{% if exercise in request.user.profile.favorite_exercises.all %}heart{% else %}heart-outline{% endif %}" 
+                                                     class="text-2xl"></ion-icon>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </a>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
-        <div class="mt-auto">
-            <div class="flex justify-around items-center bg-white rounded-full p-4 shadow-lg">
+        <footer class="mt-6">
+            <div class="flex justify-around items-center bg-white rounded-full p-3 shadow-lg">
                 <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
-                    <ion-icon name="home-outline"></ion-icon>
+                    <ion-icon name="home-outline" class="text-2xl"></ion-icon>
                 </button>
-                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
-                    <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
-                </button>
+                <a href="{% url 'exercise_page' %}" class="nav-link block p-2 text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="barbell-outline" class="text-xl"></ion-icon>
+                    </button>
+                </a>
                 <a href="{% url 'main' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
                     <button type="button" class="flex items-center justify-center w-full">
-                        <ion-icon name="add-outline"></ion-icon>
+                        <ion-icon name="add-outline" class="text-2xl"></ion-icon>
                     </button>
                 </a>
-                <button class="p-2 text-gray-600 hover:text-[#622B8F] group">
-                    <ion-icon name="heart-outline"></ion-icon>
-                </button>
+                <a href="{% url 'favorite_exercises' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
+                    <button type="button" class="flex items-center justify-center w-full">
+                        <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+                    </button>
+                </a>
                 <a href="{% url 'profile_page' %}" class="nav-link block p-2 text-gray-600 hover:text-[#622B8F] group">
                     <button type="button" class="flex items-center justify-center w-full">
-                        <ion-icon name="person-outline" class="text-xl"></ion-icon>
+                        <ion-icon name="person-outline" class="text-2xl"></ion-icon>
                     </button>
                 </a>
             </div>
-        </div>
+        </footer>
     </div>
+
     <script>
-    const searchInput = document.querySelector('input[type="text"]');
-    const categoriesContainer = document.querySelector('.flex-1');
-    searchInput.addEventListener('input', async (e) => {
-        const searchTerm = e.target.value.trim();
-        if (!searchTerm) {
-            location.reload();
-            return;
-        }
-        const response = await fetch(`?search=${encodeURIComponent(searchTerm)}`);
-        const data = await response.json();
-        categoriesContainer.innerHTML = '';
-        for (const [categoryName, exercises] of Object.entries(data.categories)) {
-            const categoryDiv = document.createElement('div');
-            categoryDiv.classList.add('mb-6');
-            const heading = document.createElement('h2');
-            heading.className = "text-[#622B8F] font-semibold mb-4";
-            heading.textContent = categoryName;
-            categoryDiv.appendChild(heading);
-            const exerciseList = document.createElement('div');
-            exerciseList.classList.add('space-y-4');
-            exercises.forEach(exercise => {
-                const exerciseItem = document.createElement('div');
-                exerciseItem.className = "exercise-item flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer";
-                exerciseItem.style.width = "430px";
-                exerciseItem.style.height = "74px";
-                exerciseItem.style.overflow = "hidden";
-                if (exercise.gif_url) {
-                    exerciseItem.innerHTML = `
-                        <img src="${exercise.gif_url}" alt="${exercise.name}" class="w-12 h-12 object-cover rounded bg-gray-200">
-                        <div>
-                            <h3 class="font-medium text-sm truncate max-w-[200px]">${exercise.name}</h3>
-                            <p class="text-sm text-[#622B8F] truncate max-w-[150px]">${exercise.muscle}</p>
-                        </div>
-                    `;
-                } else {
-                    exerciseItem.innerHTML = `
-                        <div class="w-12 h-12 flex items-center justify-center bg-gray-200 rounded">
-                            <ion-icon name="barbell-outline"></ion-icon>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-sm truncate max-w-[200px]">${exercise.name}</h3>
-                            <p class="text-sm text-[#622B8F] truncate max-w-[150px]">${exercise.muscle}</p>
-                        </div>
-                    `;
+        function toggleFavorite(exerciseId, event) {
+            event.preventDefault();
+            fetch(`/toggle-favorite/${exerciseId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const icon = event.target.closest('button').querySelector('ion-icon');
+                    if (data.action === 'added') {
+                        icon.setAttribute('name', 'heart');
+                    } else {
+                        icon.setAttribute('name', 'heart-outline');
+                    }
                 }
-                exerciseList.appendChild(exerciseItem);
             });
-            categoryDiv.appendChild(exerciseList);
-            categoriesContainer.appendChild(categoryDiv);
         }
-    });
+
+        const searchInput = document.getElementById('searchInput');
+        const categories = document.querySelectorAll('.category-section');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            categories.forEach(category => {
+                const exercises = category.querySelectorAll('.bg-gray-50');
+                let hasVisibleExercises = false;
+                
+                exercises.forEach(exercise => {
+                    const name = exercise.querySelector('h4').textContent.toLowerCase();
+                    const muscle = exercise.querySelector('p').textContent.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || muscle.includes(searchTerm)) {
+                        exercise.style.display = '';
+                        hasVisibleExercises = true;
+                    } else {
+                        exercise.style.display = 'none';
+                    }
+                });
+                
+                category.style.display = hasVisibleExercises ? '' : 'none';
+            });
+        });
     </script>
 </body>
 </html>

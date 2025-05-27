@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Muscle(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -15,7 +17,7 @@ class Exercise(models.Model):
     instructions = models.TextField(default="")
     body_part = models.CharField(max_length=50, default="")
     gif_url = models.URLField(max_length=500, blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_exercises', default=8)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_exercises', null=True)
     likes = models.ManyToManyField(User, related_name='liked_exercises', blank=True)
 
     def __str__(self):
@@ -68,5 +70,15 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     photo = models.ImageField(upload_to='profiles/', blank=True, null=True)
     workout_count = models.IntegerField(default=0)
+    favorite_exercises = models.ManyToManyField(Exercise, related_name='favorited_by', blank=True)
     def __str__(self):
         return self.user.username
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
