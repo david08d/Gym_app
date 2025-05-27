@@ -16,11 +16,15 @@ urlpatterns = [
     path('start-workout/', views.start_workout_view, name='start_workout'),
     path('add-exercise/<int:exercise_id>/', views.add_exercise, name='add_exercise'),
     path('finish-workout/', views.finish_workout, name='finish_workout'),
+    path('favorite-exercises/', views.favorite_exercises, name='favorite_exercises'),
+    path('toggle-favorite/<int:exercise_id>/', views.toggle_favorite, name='toggle_favorite'),
     path('logout/', views.logout_view, name='logout'),
     path('api/check-email/', check_email_view, name='check_email'),
     path('api/check-username/', check_username_view, name='check_username'),
     path('select-exercise/', views.select_exercise_view, name='select_exercise'),
+    path('workout/<int:workout_id>/', views.workout_detail, name='workout_detail'),
+    
 ]
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
