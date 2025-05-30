@@ -42,7 +42,7 @@
     </form>
     <p class="mt-6 text-sm text-gray-600 text-center">
       Already have an account?
-      <a href="/login" class="text-[#622B8F] hover:text-[#4e2373] font-medium">Sign in</a>
+      <a href="{% url 'login' %}" class="text-[#622B8F] hover:text-[#4e2373] font-medium">Sign in</a>
     </p>
   </div>
   <script>
@@ -99,31 +99,37 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!emailValid || !usernameValid) return;
+      
       const formData = new FormData(form);
+      const data = {
+        email: formData.get('email'),
+        username: formData.get('username'),
+        password: formData.get('password')
+      };
+
       try {
         const response = await fetch('{% url "register" %}', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
           },
-          body: JSON.stringify({
-            email: formData.get('email'),
-            username: formData.get('username'),
-            password: formData.get('password'),
-          })
+          body: JSON.stringify(data)
         });
-        const data = await response.json();
-        if (data.success) {
-          window.location.href = data.redirect;
+
+        if (response.redirected) {
+          window.location.href = "{% url 'login' %}";
         } else {
-          if (data.errors.email) {
-            emailError.textContent = data.errors.email;
-            emailError.classList.remove('hidden');
-          }
-          if (data.errors.username) {
-            usernameError.textContent = data.errors.username;
-            usernameError.classList.remove('hidden');
+          const result = await response.json();
+          if (result.errors) {
+            if (result.errors.email) {
+              emailError.textContent = result.errors.email;
+              emailError.classList.remove('hidden');
+            }
+            if (result.errors.username) {
+              usernameError.textContent = result.errors.username;
+              usernameError.classList.remove('hidden');
+            }
           }
         }
       } catch (error) {

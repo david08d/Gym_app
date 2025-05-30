@@ -265,27 +265,30 @@ def check_email_view(request):
 def register(request):
     if request.method == 'GET':
         return render(request, 'workouts/register.html')
-    serializer = UserRegisterSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
-        login(request, user)
-        return JsonResponse({
-            "success": True,
-            "message": "User created successfully!",
-            "token": token.key,
-            "redirect": "/main/"
-        })
     
-    errors = {}
-    if 'username' in serializer.errors:
-        errors['username'] = 'Username is already taken'
-    if 'email' in serializer.errors:
-        errors['email'] = 'Email is already registered'
-    return JsonResponse({
-        "success": False,
-        "errors": errors
-    }, status=400)
+    try:
+        data = json.loads(request.body)
+        serializer = UserRegisterSerializer(data=data)
+        if serializer.is_valid():
+            user = serializer.save()
+            token, _ = Token.objects.get_or_create(user=user)
+            login(request, user)
+            return redirect('login')
+        
+        errors = {}
+        if 'username' in serializer.errors:
+            errors['username'] = 'Username is already taken'
+        if 'email' in serializer.errors:
+            errors['email'] = 'Email is already registered'
+        return JsonResponse({
+            "success": False,
+            "errors": errors
+        }, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "errors": {"form": "Invalid JSON data"}
+        }, status=400)
 
 
 @api_view(['GET', 'POST'])

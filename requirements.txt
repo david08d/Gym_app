@@ -22,3 +22,5 @@ python-dotenv>=1.0.0
 # Additional common packages
 django-cors-headers>=3.14.0
 django-filter>=23.1
+
+gunicorn
